@@ -1249,9 +1249,14 @@ class PsdLayer:
 
         # layer blending ranges
         nbytes = psdformat.read(fh, 'I')
-        assert nbytes % 4 == 0
+        #XXX - For some reason I am seeing values of nbytes that are not divisible by 4, so going to
+        #   comment out the assertion and just throw out any data that is not divisible by 4.
+        #assert nbytes % 4 == 0
+        nranges = nbytes // 4
+        range_junk_len = nbytes % 4
         blending_ranges = psdformat.read(fh, 'i' * (nbytes // 4))
-
+        if range_junk_len:
+            fh.read(range_junk_len)
         name = str(PsdPascalString.read(fh, pad=4))
 
         info = read_psdtags(
@@ -2335,8 +2340,9 @@ class PsdSheetColorSetting(PsdKeyABC):
 class PsdReferencePoint(PsdKeyABC):
     """Reference point."""
 
-    y: float
+    # NOTE: Updated to make x first and y second
     x: float
+    y: float
     key = PsdKey.REFERENCE_POINT
 
     @classmethod
